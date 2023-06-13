@@ -34,6 +34,23 @@ namespace Esolang
             sr = s;
             TokenGeter = new GetToken(sr);
         }
+        void GetBuffer()
+        {
+            while (Buffer.Count == 0)
+            {
+                string temp = Console.ReadLine();
+                if (temp == null) { }
+                foreach (char c in temp)
+                {
+                    Buffer.Add(c);
+                }
+                Buffer.Add('\n');
+            }
+        }
+        void PrintErorr(int ErorrCode)
+        {
+
+        }
         public void RunCode()
         {
             while (true)
@@ -42,14 +59,14 @@ namespace Esolang
                 //포인터 이동
                 if (token.TokenType == TokenList.Pointer)
                 {
-                    if (token.Value > 0 && token.Value < 32765)
-                    {
-                        Pointer = token.Value;
-                    }
-                    else
+                    if (token.Value < 0 && token.Value > 32765)
                     {
                         Console.WriteLine($"Erorr: Index Erorr");
                         break;
+                    }
+                    else
+                    {
+                        Pointer = token.Value;
                     }
                 }
                 //대입
@@ -77,10 +94,32 @@ namespace Esolang
                 }
                 if (token.TokenType == TokenList.InputInt)
                 {
-                    /*if ()
+                    int Value = 0;
+                    if (Buffer.Count == 0)
                     {
+                        GetBuffer();
+                    }
+                    for (;;)
+                    {
+                        if (Buffer.Count == 0)
+                        {
+                            GetBuffer();
+                        }
+                        if (TokenGeter.GetCharType(Buffer[0]) != CharList.Num)
+                        {
+                            Buffer.RemoveAt(0);
+                            continue;
+                        }
+                        while (TokenGeter.GetCharType(Buffer[0]) == CharList.Num)
+                        {
+                            Value = Value * 10 + ((int)Buffer[0] - '0');
+                            Buffer.RemoveAt(0);
+                        }
+                        break;
+                    }
 
-                    }*/
+                    Memory[Pointer] = Value;
+                    Buffer.Remove(Buffer[0]);
                 }
                 if (token.TokenType == TokenList.InputChar)
                 {
@@ -88,21 +127,22 @@ namespace Esolang
                     {
                         while (Buffer.Count == 0)
                         {
-                            string temp = Console.ReadLine();
-                            foreach (char c in temp)
-                            {
-                                Buffer.Add(c);
-                            }
+                            GetBuffer();
                         }
                     }
                     Memory[Pointer] = Buffer[0];
-                    Buffer.Remove(Buffer[0]);
+                    Buffer.RemoveAt(0);
+                }
+                if (token.TokenType == TokenList.Value)
+                {
+                    //Console.WriteLine(Memory[token.Value]);
                 }
                 if (token.TokenType == TokenList.Char)
                 {
                 }
                 if (token.TokenType == TokenList.Error)
                 {
+
                     break;
                 }
                 if (token.TokenType == TokenList.End)
@@ -144,6 +184,7 @@ namespace Esolang
             charLists['\"'] = CharList.DoubleQuote;
             charLists['\\'] = CharList.BackSlash;
             charLists['#'] = CharList.Hash;
+            charLists['$'] = CharList.Dollar;
             charLists[','] = CharList.Comma;
             charLists['.'] = CharList.Dot;
             charLists['+'] = CharList.Plus;
@@ -151,7 +192,7 @@ namespace Esolang
             charLists[':'] = CharList.Colon;
             charLists[';'] = CharList.Semicolon;
         }
-        private CharList GetCharType(char Char)
+        public CharList GetCharType(char Char)
         {
             if ((int)Char < 0 || (int)Char > 256)
             {
@@ -167,7 +208,7 @@ namespace Esolang
             if (Char == ' ' || Char == '\n' || Char == '\t' || Char == '\v' || Char == '\f' || Char == '\r')
                 Char = (char)sr.Read();
             //상수
-            if (GetCharType(Char) == CharList.Num)
+            /*정수*/if (GetCharType(Char) == CharList.Num)
             {
                 for (Value = 0; GetCharType(Char) == CharList.Num; Char = (char)sr.Read())
                 {
@@ -175,7 +216,7 @@ namespace Esolang
                 }
                 return new Token(TokenList.Inter,Value);
             }
-            if (GetCharType(Char) == CharList.Quote)
+            /*문자*/if (GetCharType(Char) == CharList.Quote)
             {
                 Char = (char)sr.Read();
                 Value = (int)Char;
@@ -206,6 +247,7 @@ namespace Esolang
                 }
                 
             }
+
             //대입
             if (GetCharType(Char) == CharList.Equal)
             {
@@ -248,6 +290,17 @@ namespace Esolang
                     Value = Value * 10 + ((int)Char - '0');
                 }
                 return new Token(TokenList.Pointer, Value);
+            }
+            if (GetCharType(Char) == CharList.Dollar)
+            {
+                Char = (char)sr.Read();
+
+                if (GetCharType(Char) != CharList.Num) return new Token(TokenList.Error, 101);
+                for (Value = 0; GetCharType(Char) == CharList.Num; Char = (char)sr.Read())
+                {
+                    Value = Value * 10 + ((int)Char - '0');
+                }
+                return new Token(TokenList.Value, Value);
             }
             if (GetCharType(Char) == CharList.Semicolon)
             {
@@ -300,3 +353,4 @@ namespace Esolang
         public Token() { Value = 0; TokenType = TokenList.Other;}
     }
 }
+//d
