@@ -14,12 +14,15 @@ namespace Esolang
         Plus,Minus,
         Quote, DoubleQuote,
         BackSlash, Slash,
-        Hash
+        Hash, Exclamation
     }
     enum TokenList
     {
         Inter, Char, Equal,Pointer,Value,
         PrintInt, PrintChar,InputInt, InputChar,
+        ValueChange,PlusOne,MinusOne,
+        PlusValue, MinusValue,
+        Plus, Minus,
         Other,End,Error
     }
     internal class Interpreter
@@ -73,9 +76,47 @@ namespace Esolang
                 if (token.TokenType == TokenList.Equal)
                 {
                     token = TokenGeter.GetCharToken();
-                    if (token.TokenType == TokenList.Inter || token.TokenType == TokenList.Char)
+                    if (token.TokenType == TokenList.Inter || token.TokenType == TokenList.Char )
                     {
                         Memory[Pointer] = token.Value;
+                    }
+                    else if (token.TokenType == TokenList.Value)
+                    {
+                        Memory[Pointer] = Memory[token.Value];
+                    }
+                    else
+                    {
+                        Console.WriteLine($"Erorr: Next Token is Not Value Type");
+                        break;
+                    }
+                }
+                if (token.TokenType == TokenList.PlusValue)
+                {
+                    token = TokenGeter.GetCharToken();
+                    if (token.TokenType == TokenList.Inter || token.TokenType == TokenList.Char)
+                    {
+                        Memory[Pointer] += token.Value;
+                    }
+                    else if (token.TokenType == TokenList.Value)
+                    {
+                        Memory[Pointer] += Memory[token.Value];
+                    }
+                    else
+                    {
+                        Console.WriteLine($"Erorr: Next Token is Not Value Type");
+                        break;
+                    }
+                }
+                if (token.TokenType == TokenList.MinusValue)
+                {
+                    token = TokenGeter.GetCharToken();
+                    if (token.TokenType == TokenList.Inter || token.TokenType == TokenList.Char)
+                    {
+                        Memory[Pointer] -= token.Value;
+                    }
+                    else if (token.TokenType == TokenList.Value)
+                    {
+                        Memory[Pointer] -= Memory[token.Value];
                     }
                     else
                     {
@@ -133,13 +174,40 @@ namespace Esolang
                     Memory[Pointer] = Buffer[0];
                     Buffer.RemoveAt(0);
                 }
+
+                //연산(외부)
+                if (token.TokenType == TokenList.ValueChange)
+                {
+                    if (Memory[Pointer] == 0)
+                    {
+                        Memory[Pointer] = 1;
+                    }
+                    else
+                    {
+                        Memory[Pointer] = 0;
+                    }
+                }
+                if (token.TokenType == TokenList.PlusOne)
+                {
+                    Memory[Pointer] += 1;
+                }
+                if (token.TokenType == TokenList.MinusOne)
+                {
+                    Memory[Pointer] -= 1;
+                }
+                //주석
                 if (token.TokenType == TokenList.Value)
+                {
+                    //Console.WriteLine(Memory[token.Value]);
+                }
+                if (token.TokenType == TokenList.Inter)
                 {
                     //Console.WriteLine(Memory[token.Value]);
                 }
                 if (token.TokenType == TokenList.Char)
                 {
                 }
+
                 if (token.TokenType == TokenList.Error)
                 {
 
@@ -159,18 +227,19 @@ namespace Esolang
         CharList[] charLists = new CharList[256];
         void CharListinit()
         {
+            //배열 초기화
             for (int i = 0; i < 256; i++)
             {
                 charLists[i] = CharList.Other;
             }
+            
+            //정수 키워드 설정
             for (int i = '0'; i <= '9'; i++)
             {
                 charLists[i] = CharList.Num;
             }
-            for (int i = '0'; i <= '9'; i++)
-            {
-                charLists[i] = CharList.Num;
-            }
+
+            //문자 키워드 설정
             for (int i = 'a'; i <= 'z'; i++)
             {
                 charLists[i] = CharList.Char;
@@ -179,18 +248,41 @@ namespace Esolang
             {
                 charLists[i] = CharList.Char;
             }
+
+            //연산자
             charLists['='] = CharList.Equal;
-            charLists['\''] = CharList.Quote;
-            charLists['\"'] = CharList.DoubleQuote;
-            charLists['\\'] = CharList.BackSlash;
-            charLists['#'] = CharList.Hash;
-            charLists['$'] = CharList.Dollar;
-            charLists[','] = CharList.Comma;
-            charLists['.'] = CharList.Dot;
             charLists['+'] = CharList.Plus;
             charLists['-'] = CharList.Minus;
+            charLists['*'] = CharList.Equal;
+            charLists['/'] = CharList.Equal;
+            charLists['%'] = CharList.Equal;
+
+            //따옴표
+            charLists['\''] = CharList.Quote;
+            charLists['\"'] = CharList.DoubleQuote;
+
+            //슬래쉬
+            charLists['\\'] = CharList.BackSlash;
+            charLists['/'] = CharList.BackSlash;
+
+            //포인터
+            charLists['#'] = CharList.Hash;
+            charLists['$'] = CharList.Dollar;
+
+            //입/출력
+            charLists['.'] = CharList.Dot;
+            charLists[','] = CharList.Comma;
             charLists[':'] = CharList.Colon;
             charLists[';'] = CharList.Semicolon;
+
+            //괄호
+            charLists['['] = CharList.Semicolon;
+            charLists[']'] = CharList.Semicolon;
+            charLists['('] = CharList.Semicolon;
+            charLists[')'] = CharList.Semicolon;
+            
+            //값 반전
+            charLists['!'] = CharList.Exclamation;
         }
         public CharList GetCharType(char Char)
         {
@@ -207,6 +299,7 @@ namespace Esolang
             //공백 스킵
             if (Char == ' ' || Char == '\n' || Char == '\t' || Char == '\v' || Char == '\f' || Char == '\r')
                 Char = (char)sr.Read();
+
             //상수
             /*정수*/if (GetCharType(Char) == CharList.Num)
             {
@@ -248,16 +341,56 @@ namespace Esolang
                 
             }
 
-            //대입
+            if (GetCharType(Char) == CharList.DoubleQuote)
+            {
+                //Console.WriteLine($"{Char}:DoubleQuote");
+            }
+
+            //대입/연산
             if (GetCharType(Char) == CharList.Equal)
             {
                 Char = (char)sr.Read();
                 return new Token(TokenList.Equal);
             }
+            if (GetCharType(Char) == CharList.Exclamation)
+            {
+                Char = (char)sr.Read();
+                return new Token(TokenList.ValueChange);
+            }
             if (GetCharType(Char) == CharList.Plus)
             {
-
+                Char = (char)sr.Read();
+                if (GetCharType(Char) == CharList.Plus)
+                {
+                    Char = (char)sr.Read();
+                    return new Token(TokenList.PlusOne);
+                }
+                else if (GetCharType(Char) == CharList.Equal)
+                {
+                    Char = (char)sr.Read();
+                    return new Token(TokenList.PlusValue);
+                }
+                else
+                    return new Token(TokenList.Plus);
             }
+            if (GetCharType(Char) == CharList.Minus)
+            {
+                Char = (char)sr.Read();
+                if (GetCharType(Char) == CharList.Minus)
+                {
+                    Char = (char)sr.Read();
+                    return new Token(TokenList.MinusOne);
+                }
+                else if (GetCharType(Char) == CharList.Equal)
+                {
+                    Char = (char)sr.Read();
+                    return new Token(TokenList.MinusValue);
+                }
+                else
+                    return new Token(TokenList.Minus);
+            }
+
+
             //입/출력
             if (GetCharType(Char) == CharList.Dot)
             {
@@ -279,6 +412,7 @@ namespace Esolang
                 Char = (char)sr.Read();
                 return new Token(TokenList.InputChar);
             }
+
             //포인터
             if (GetCharType(Char) == CharList.Hash)
             {
@@ -302,18 +436,15 @@ namespace Esolang
                 }
                 return new Token(TokenList.Value, Value);
             }
-            if (GetCharType(Char) == CharList.Semicolon)
-            {
-                //Console.WriteLine($"Comma");
-            }
+
+            //루프
+
+            
             if (GetCharType(Char) == CharList.Char)
             {
                 //Console.WriteLine($"{Char}:Char");
             }
-            if (GetCharType(Char) == CharList.DoubleQuote)
-            {
-                //Console.WriteLine($"{Char}:DoubleQuote");
-            }
+            
                 
             if (GetCharType(Char) == CharList.BackSlash)
             {
@@ -325,6 +456,7 @@ namespace Esolang
             }
             if (sr.EndOfStream)
             {
+                //Char = (char)sr.Read();
                 return new Token(TokenList.End);
             }
 
@@ -353,4 +485,3 @@ namespace Esolang
         public Token() { Value = 0; TokenType = TokenList.Other;}
     }
 }
-//d
