@@ -8,16 +8,19 @@ using System.Runtime.InteropServices;
 
 namespace Esolang
 {
-    
-
     class MainClass
     {
-        
+        static StreamReader sr;
         public static void Main(string[] argv)
         {
-            StreamReader sr = new StreamReader(@"./Code.txt");
-            Interpreter interpreter = new Interpreter(sr);
-            interpreter.RunCode();
+            using (FileStream fs = new FileStream(@"./Code.txt", FileMode.Open, FileAccess.Read))
+            {
+                Interpreter interpreter = new Interpreter(fs);
+                interpreter.RunCode();
+            }
+            
+
+
         }
     }
     
