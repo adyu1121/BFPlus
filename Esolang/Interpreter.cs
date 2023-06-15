@@ -206,7 +206,7 @@ namespace Esolang
                 //루프
                 if (token.TokenType == TokenList.StartLoop)
                 {
-                    //Token token1 = TokenGeter.GetCharToken();
+                    
                 }
                 //주석(미구현)
                 if (token.TokenType == TokenList.Value)
@@ -459,10 +459,9 @@ namespace Esolang
             //루프
             if (GetCharType(Char) == CharList.StartBrakets)
             {
-                Console.WriteLine(Char);
                 Char = (char)fs.ReadByte();
-                Console.WriteLine(Char);
-                return new Token(TokenList.StartLoop);
+                Value = fs.Position;
+                return new Token(TokenList.StartLoop,Value);
             }
             if (GetCharType(Char) == CharList.EndBrakets)
             {
