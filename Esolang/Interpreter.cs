@@ -151,7 +151,7 @@ namespace Esolang
                     {
                         GetBuffer();
                     }
-                    for (;;)
+                    while(true)
                     {
                         if (Buffer.Count == 0)
                         {
