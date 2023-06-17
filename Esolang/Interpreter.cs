@@ -7,35 +7,17 @@ using System.Threading.Tasks;
 
 namespace Esolang
 {
-    enum CharList
-    {
-        Other,
-        Char, Num, Equal, EOF,
-        Colon, Semicolon, Comma, Dot, Dollar,
-        Plus,Minus,
-        Quote, DoubleQuote,
-        BackSlash, Slash,
-        StartBrakets, EndBrakets, StartParentheses, EndParentheses,
-        Hash, Exclamation
-    }
-    enum TokenList
-    {
-        Inter, Char, Equal,Pointer,Value,
-        PrintInt, PrintChar,InputInt, InputChar,
-        ValueChange,PlusOne,MinusOne,
-        PlusValue, MinusValue,
-        Plus, Minus,
-        StartLoop,EndLoop,
-        Other,End,Error
-    }
+    
     internal class Interpreter
     {
         FileStream fs;
         GetToken TokenGeter;
+
         long[] Memory = new long[32768];
         bool End = false;
-        List<char> Buffer = new List<char>();
         long Pointer = 0;
+        List<char> Buffer = new List<char>();
+
         public Interpreter(FileStream s)
         {
             fs = s;
@@ -54,7 +36,7 @@ namespace Esolang
                 Buffer.Add('\n');
             }
         }
-        void PrintErorr(int ErorrCode)
+        void PrintErorr(long ErorrCode)
         {
 
         }
@@ -238,9 +220,11 @@ namespace Esolang
                 {
                     Console.WriteLine($"Erorr");
                 }
+
                 //에러 처리
                 if (token.TokenType == TokenList.Error)
                 {
+                    PrintErorr(token.Value);
                     break;
                 }
                 else if (token.TokenType != TokenList.StartLoop)

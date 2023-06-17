@@ -6,8 +6,28 @@ using System.Threading.Tasks;
 
 namespace Esolang
 {
-    
-        class GetToken
+    enum CharList
+    {
+        Other, Expected,
+        Char, Num, Equal, EOF,
+        Colon, Semicolon, Comma, Dot, Dollar,
+        Plus, Minus,
+        Quote, DoubleQuote,
+        BackSlash, Slash,
+        StartBrakets, EndBrakets, StartParentheses, EndParentheses,
+        Hash, Exclamation
+    }
+    enum TokenList
+    {
+        Inter, Char, Equal, Pointer, Value,
+        PrintInt, PrintChar, InputInt, InputChar,
+        ValueChange, PlusOne, MinusOne,
+        PlusValue, MinusValue,
+        Plus, Minus,
+        StartLoop, EndLoop,
+        Other, End, Error
+    }
+    class GetToken
         {
             char Char = ' ';
             public FileStream fs;
@@ -35,6 +55,7 @@ namespace Esolang
                 {
                     charLists[i] = CharList.Char;
                 }
+                charLists['_'] = CharList.Char;
 
                 //연산자
                 charLists['='] = CharList.Equal;
@@ -68,6 +89,19 @@ namespace Esolang
                 charLists[']'] = CharList.EndBrakets;
                 charLists['('] = CharList.StartParentheses;
                 charLists[')'] = CharList.EndBrakets;
+
+                //예정
+                charLists['`'] = CharList.Expected;
+                charLists['~'] = CharList.Expected;
+                charLists['{'] = CharList.Expected;
+                charLists['}'] = CharList.Expected;
+                charLists['<'] = CharList.Expected;
+                charLists['>'] = CharList.Expected;
+                charLists['/'] = CharList.Expected;
+                charLists['@'] = CharList.Expected;
+                charLists['^'] = CharList.Expected;
+                charLists['&'] = CharList.Expected;
+                charLists['|'] = CharList.Expected;
             }
             public CharList GetCharType(char Char)
             {
@@ -118,6 +152,8 @@ namespace Esolang
                             case '\\':
                                 Value = '\\';
                                 break;
+                            default:
+                                return new Token(TokenList.Error, 104);
                         }
                     }
                     GetChar();
@@ -133,10 +169,7 @@ namespace Esolang
                     }
 
                 }
-                if (GetCharType(Char) == CharList.DoubleQuote)
-                {
-                    //Console.WriteLine($"{Char}:DoubleQuote");
-                }
+                
 
                 //대입/연산
                 if (GetCharType(Char) == CharList.Equal)
@@ -240,6 +273,18 @@ namespace Esolang
                 {
                     GetChar();
                     return new Token(TokenList.EndLoop);
+                }
+
+                //예정
+                if (GetCharType(Char) == CharList.DoubleQuote)
+                {
+                    //Console.WriteLine($"{Char}:DoubleQuote");
+                    return new Token(TokenList.Error, 103);
+                }
+                if (GetCharType(Char) == CharList.Expected)
+                {
+                    return new Token(TokenList.Error, 103);
+                    //Console.WriteLine($"{Char}:DoubleQuote");
                 }
 
                 if (GetCharType(Char) == CharList.Char)
