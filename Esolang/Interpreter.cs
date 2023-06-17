@@ -13,10 +13,12 @@ namespace Esolang
         FileStream fs;
         GetToken TokenGeter;
 
-        long[] Memory = new long[32768];
+        long[] Memory = new long[32750];
         bool End = false;
         long Pointer = 0;
         List<char> Buffer = new List<char>();
+
+        bool Error = false;
 
         public Interpreter(FileStream s)
         {
@@ -36,18 +38,42 @@ namespace Esolang
                 Buffer.Add('\n');
             }
         }
-        void PrintErorr(long ErorrCode)
+        void PrintError(long ErrorCode)
         {
-
+            Error = true;
+            switch (ErrorCode)
+            {
+                case 101:
+                    Console.WriteLine("Pointer is Only Number");
+                    break;
+                case 102:
+                    Console.WriteLine("Not Found '");
+                    break;
+                case 103:
+                    Console.WriteLine("Now Unsupported Sign");
+                    break;
+                case 104:
+                    Console.WriteLine("Unsupported Escape Character");
+                    break;
+                case 105:
+                    Console.WriteLine("No matching '['");
+                    break;
+                case 106:
+                    Console.WriteLine("The next token of the assignment operator must be Int,Char,$");
+                    break;
+                case 107:
+                    Console.WriteLine("Erorr:Index is 0~32749 in Number");
+                    break;
+            }
         }
         void RunToken(Token token)
         {
             //포인터 이동
             if (token.TokenType == TokenList.Pointer)
             {
-                if (token.Value < 0 && token.Value > 32765)
+                if (token.Value < 0 || token.Value >= 32750)
                 {
-                    Console.WriteLine($"Erorr: Index Erorr");
+                    PrintError(107);
                 }
                 else
                 {
@@ -65,11 +91,16 @@ namespace Esolang
                 }
                 else if (token.TokenType == TokenList.Value)
                 {
+                    if (token.Value < 0 || token.Value >= 32750)
+                    {
+                        PrintError(107);
+                    }
+                    else
                     Memory[Pointer] = Memory[token.Value];
                 }
                 else
                 {
-                    Console.WriteLine($"Erorr: Next Token is Not Value Type");
+                    PrintError(106);
                 }
             }
             if (token.TokenType == TokenList.PlusValue)
@@ -85,7 +116,7 @@ namespace Esolang
                 }
                 else
                 {
-                    Console.WriteLine($"Erorr: Next Token is Not Value Type");
+                    PrintError(106);
                 }
             }
             if (token.TokenType == TokenList.MinusValue)
@@ -101,7 +132,7 @@ namespace Esolang
                 }
                 else
                 {
-                    Console.WriteLine($"Erorr: Next Token is Not Value Type");
+                    PrintError(106);
                 }
             }
 
@@ -214,17 +245,18 @@ namespace Esolang
             while (true)
             {
                 Token token = TokenGeter.GetCharToken();
-                
+                if (Error)
+                    break;
                 //루프 오류
                 if (token.TokenType == TokenList.EndLoop)
                 {
-                    Console.WriteLine($"Erorr");
+                    PrintError(105);
                 }
 
                 //에러 처리
                 if (token.TokenType == TokenList.Error)
                 {
-                    PrintErorr(token.Value);
+                    PrintError(token.Value);
                     break;
                 }
                 else if (token.TokenType != TokenList.StartLoop)
